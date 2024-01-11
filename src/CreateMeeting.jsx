@@ -1,8 +1,20 @@
 import { Flex, Text, Button } from "@chakra-ui/react";
 import React from "react";
 import { Link } from "react-router-dom";
+import Peer from "peerjs";
+import { useNavigate } from "react-router-dom";
 
 const CreateMeeting = () => {
+  const navigate = useNavigate();
+  //Creating Peer
+  const createPeer = () => {
+    console.log("createPeer triggered");
+    var peer = new Peer();
+    peer.on("open", (id) => {
+      navigate(`/meeting/${id}`);
+    });
+  };
+
   return (
     <Flex
       margin={"auto"}
@@ -18,7 +30,7 @@ const CreateMeeting = () => {
       </Text>
 
       {/* Button */}
-      <Button>Create Meeting</Button>
+      <Button onClick={createPeer}>Create Meeting</Button>
 
       {/* Back Button */}
       <Flex position={"absolute"} top={10} left={10}>
