@@ -6,6 +6,7 @@ import About from "./About";
 import HeroPage from "./HeroPage";
 import JoinMeeting from "./JoinMeeting";
 import CreateMeeting from "./CreateMeeting";
+import Meeting from "./Meeting";
 
 const router = createBrowserRouter([
   {
@@ -23,6 +24,11 @@ const router = createBrowserRouter([
   {
     path: "/join-meeting",
     element: <JoinMeeting />,
+  },
+  // Dynamic Routing
+  {
+    path: "/meeting/:meetingId",
+    element: <Meeting />,
   },
 ]);
 
