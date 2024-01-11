@@ -1,12 +1,21 @@
-import { Flex, Button, Code, Alert, AlertIcon, Box } from "@chakra-ui/react";
+import {
+  Flex,
+  Button,
+  Code,
+  Alert,
+  AlertIcon,
+  Box,
+  Text,
+} from "@chakra-ui/react";
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { FaCamera } from "react-icons/fa6";
+import { useEffect } from "react";
 
 // Alert Box
 const CopiedAlert = () => {
   return (
-    <Flex position={"absolute"} top={10} right={10}>
+    <Flex position={"fixed"} top={10} right={10}>
       <Alert status="success" rounded={"full"}>
         <AlertIcon />
         Copied !
@@ -18,6 +27,7 @@ const CopiedAlert = () => {
 const Meeting = () => {
   const [copied, setCopied] = React.useState(false);
   const [currentUserVideo, setCurrentUserVideo] = React.useState(null);
+  const [anotherUserVideo, setAnotherUserVideo] = React.useState(null);
   const [cameraOpened, setCameraOpened] = React.useState(
     navigator.mediaDevices ? false : true
   );
@@ -32,8 +42,6 @@ const Meeting = () => {
         audio: true,
       })
       .then((stream) => {
-        window.stream = stream;
-        document.querySelector("video").srcObject = stream;
         setCurrentUserVideo(stream);
       });
   };
@@ -51,28 +59,51 @@ const Meeting = () => {
           <Button colorScheme="teal">Home</Button>
         </Link>
       </Flex>
-      {!cameraOpened && (
-        <Button colorScheme="teal" rounded={"3xl"} onClick={openCamera}>
-          <FaCamera />
-        </Button>
-      )}
-      {/* Your Video */}
-      {currentUserVideo && (
-        <Box top={10} right={10} border={"3px solid gray"} width={"20rem"}>
-          <video
-            autoPlay
-            playsInline
-            muted
-            ref={(video) => {
-              if (video) {
-                video.srcObject = window.stream;
-              }
-            }}
-            width={"100%"}
-            height={"100%"}
-          />
-        </Box>
-      )}
+      {/* Window */}
+      <Flex
+        border={"2px dotted gray"}
+        width={"80vw"}
+        height={"70vh"}
+        rounded={"3xl"}
+        boxShadow={"xl"}
+        flexDirection={"row"}
+        gap={10}
+        padding={5}
+        justifyContent={"center"}
+        alignItems={"center"}
+      >
+        {/* Your Sides */}
+        <Flex>
+          {!cameraOpened && (
+            <Button colorScheme="teal" rounded={"3xl"} onClick={openCamera}>
+              <FaCamera />
+            </Button>
+          )}
+          {currentUserVideo && (
+            <Box border={"3px solid gray"} width={"80%"} height={"80%"}>
+              <video
+                autoPlay
+                playsInline
+                muted
+                ref={(video) => {
+                  if (video) {
+                    video.srcObject = currentUserVideo;
+                  }
+                }}
+                width={"100%"}
+                height={"100%"}
+              />
+            </Box>
+          )}
+        </Flex>
+
+        {/* Another Person Sides */}
+        <Flex>
+          {!anotherUserVideo && (
+            <Button colorScheme="whatsapp">Invite a friend</Button>
+          )}
+        </Flex>
+      </Flex>
       {/* Meeting ID */}
       <Flex
         gap={5}
