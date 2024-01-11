@@ -1,6 +1,7 @@
-import { Flex, Button, Code, Alert, AlertIcon } from "@chakra-ui/react";
+import { Flex, Button, Code, Alert, AlertIcon, Box } from "@chakra-ui/react";
 import React from "react";
 import { useParams, Link } from "react-router-dom";
+import { FaCamera } from "react-icons/fa6";
 
 // Alert Box
 const CopiedAlert = () => {
@@ -16,7 +17,27 @@ const CopiedAlert = () => {
 
 const Meeting = () => {
   const [copied, setCopied] = React.useState(false);
+  const [currentUserVideo, setCurrentUserVideo] = React.useState(null);
+  const [cameraOpened, setCameraOpened] = React.useState(
+    navigator.mediaDevices ? false : true
+  );
   const { meetingId } = useParams();
+
+  // Open Camera
+  const openCamera = () => {
+    setCameraOpened(true);
+    navigator.mediaDevices
+      .getUserMedia({
+        video: true,
+        audio: true,
+      })
+      .then((stream) => {
+        window.stream = stream;
+        document.querySelector("video").srcObject = stream;
+        setCurrentUserVideo(stream);
+      });
+  };
+
   return (
     <Flex
       margin={"auto"}
@@ -30,7 +51,28 @@ const Meeting = () => {
           <Button colorScheme="teal">Home</Button>
         </Link>
       </Flex>
-      Meeting {meetingId}
+      {!cameraOpened && (
+        <Button colorScheme="teal" rounded={"3xl"} onClick={openCamera}>
+          <FaCamera />
+        </Button>
+      )}
+      {/* Your Video */}
+      {currentUserVideo && (
+        <Box top={10} right={10} border={"3px solid gray"} width={"20rem"}>
+          <video
+            autoPlay
+            playsInline
+            muted
+            ref={(video) => {
+              if (video) {
+                video.srcObject = window.stream;
+              }
+            }}
+            width={"100%"}
+            height={"100%"}
+          />
+        </Box>
+      )}
       {/* Meeting ID */}
       <Flex
         gap={5}
