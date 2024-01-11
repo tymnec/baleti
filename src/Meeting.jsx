@@ -6,11 +6,15 @@ import {
   AlertIcon,
   Box,
   Text,
+  useProgressStyles,
 } from "@chakra-ui/react";
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { FaCamera } from "react-icons/fa6";
 import { useEffect } from "react";
+import Peer from "peerjs";
+import { userJoin } from "./JoinMeeting";
+import { userCreate } from "./CreateMeeting";
 
 // Alert Box
 const CopiedAlert = () => {
@@ -24,14 +28,29 @@ const CopiedAlert = () => {
   );
 };
 
+const ConnectedAlert = () => {
+  return (
+    <Flex position={"fixed"} top={10} right={10}>
+      <Alert status="success" rounded={"full"}>
+        <AlertIcon />
+        Connected !
+      </Alert>
+    </Flex>
+  );
+};
+
 const Meeting = () => {
   const [copied, setCopied] = React.useState(false);
   const [currentUserVideo, setCurrentUserVideo] = React.useState(null);
   const [anotherUserVideo, setAnotherUserVideo] = React.useState(null);
+  const [userPreference, setUserPreference] = React.useState(null);
   const [cameraOpened, setCameraOpened] = React.useState(
     navigator.mediaDevices ? false : true
   );
   const { meetingId } = useParams();
+  const [yourId, setYourId] = React.useState("");
+  const [peerId, setPeerId] = React.useState("");
+  const [connected, setConnected] = React.useState(false);
 
   // Open Camera
   const openCamera = () => {
@@ -44,6 +63,84 @@ const Meeting = () => {
       .then((stream) => {
         setCurrentUserVideo(stream);
       });
+  };
+
+  // Connect to Peer Server
+  const connect = () => {
+    // console.log(user);
+    if (userPreference === "host") {
+      console.log(userCreate);
+      userCreate.on("connection", (conn) => {
+        conn.on("open", () => {
+          console.log("Connected");
+
+          setConnected(true);
+          setTimeout(() => {
+            setConnected(false);
+          }, 3000);
+        });
+      });
+    } else if (userPreference === "joining") {
+      console.log(userJoin);
+      var conn = userJoin.connect(peerId);
+      conn.on("open", () => {
+        console.log("Connected");
+        setConnected(true);
+        setTimeout(() => {
+          setConnected(false);
+        }, 3000);
+      });
+    }
+  };
+
+  useEffect(() => {
+    connect();
+  }, [peerId]);
+
+  useEffect(() => {
+    var yourId =
+      meetingId.search(":") === -1 ? meetingId : meetingId.split(":")[0];
+    var peerId = meetingId.search(":") === -1 ? "" : meetingId.split(":")[1];
+
+    console.log("Meeting ID: " + meetingId);
+    console.log("Your ID: " + yourId);
+    console.log("Peer Id: " + peerId);
+    setPeerId(peerId);
+    setYourId(yourId);
+
+    meetingId.search(":") === -1
+      ? setUserPreference("host")
+      : setUserPreference("joining");
+
+    console.log(userPreference);
+  }, []);
+
+  const joinCall = () => {
+    if (userPreference === "joining") {
+      if (!cameraOpened) openCamera();
+      else {
+        var call = userJoin.call(peerId, currentUserVideo);
+
+        call.on("stream", function (stream) {
+          setAnotherUserVideo(stream);
+        });
+      }
+    }
+  };
+
+  const answerCall = () => {
+    if (userPreference === "host") {
+      if (!cameraOpened) openCamera();
+      else {
+        userCreate.on("call", (call) => {
+          call.answer(currentUserVideo);
+          call.on("stream", function (stream) {
+            setAnotherUserVideo(stream);
+            console.log("Answered");
+          });
+        });
+      }
+    }
   };
 
   return (
@@ -98,9 +195,38 @@ const Meeting = () => {
         </Flex>
 
         {/* Another Person Sides */}
-        <Flex>
-          {!anotherUserVideo && (
+        <Flex wrap={"wrap"}>
+          {!anotherUserVideo ? (
             <Button colorScheme="whatsapp">Invite a friend</Button>
+          ) : (
+            <Flex>
+              <Box border={"3px solid gray"} width={"80%"} height={"80%"}>
+                <video
+                  autoPlay
+                  playsInline
+                  muted
+                  ref={(video) => {
+                    if (video) {
+                      video.srcObject = anotherUserVideo;
+                    }
+                  }}
+                  width={"100%"}
+                  height={"100%"}
+                />
+              </Box>
+            </Flex>
+          )}
+
+          {peerId && !anotherUserVideo && (
+            <Button marginX={5} onClick={joinCall}>
+              Join Call
+            </Button>
+          )}
+
+          {!anotherUserVideo && (
+            <Button marginX={5} onClick={answerCall}>
+              Answer Call
+            </Button>
           )}
         </Flex>
       </Flex>
@@ -117,8 +243,9 @@ const Meeting = () => {
           rounded={"3xl"}
           colorScheme={"whatsapp"}
           border={"3px solid green"}
+          width={"max-content"}
         >
-          {meetingId}
+          {meetingId.search(":") === -1 ? meetingId : meetingId.split(":")[1]}
         </Code>
         <Button
           colorScheme="whatsapp"
@@ -134,6 +261,9 @@ const Meeting = () => {
 
         {/* Alert Box */}
         {copied && <CopiedAlert />}
+
+        {/* Connected */}
+        {connected && <ConnectedAlert />}
       </Flex>
     </Flex>
   );

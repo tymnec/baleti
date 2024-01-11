@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import Peer from "peerjs";
 import { useNavigate } from "react-router-dom";
 
+export var userCreate = null;
+
 const CreateMeeting = () => {
   const navigate = useNavigate();
   //Creating Peer
@@ -13,6 +15,7 @@ const CreateMeeting = () => {
     peer.on("open", (id) => {
       navigate(`/meeting/${id}`);
     });
+    userCreate = peer;
   };
 
   return (

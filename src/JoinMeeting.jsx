@@ -1,8 +1,25 @@
-import { Flex, Button, Text, Input } from "@chakra-ui/react";
+import { Flex, Button, Text, Input, useConst } from "@chakra-ui/react";
 import { Link } from "react-router-dom";
-import React from "react";
+import React, { createContext } from "react";
+import { useNavigate } from "react-router-dom";
+import Peer from "peerjs";
+
+export var userJoin = null;
 
 const JoinMeeting = () => {
+  const [peerId, setPeerId] = React.useState("");
+  const navigate = useNavigate();
+  //Creating Peer
+  const createPeer = () => {
+    console.log("createPeer triggered");
+    var peer = new Peer();
+    peer.on("open", (id) => {
+      navigate(`/meeting/${id}:${peerId}`);
+    });
+
+    userJoin = peer;
+  };
+
   return (
     <Flex
       margin={"auto"}
@@ -34,9 +51,13 @@ const JoinMeeting = () => {
         >
           PEER ID
         </Text>
-        <Input placeholder="Enter Peer ID here" />
+        <Input
+          placeholder="Enter Peer ID here"
+          value={peerId}
+          onChange={(e) => setPeerId(e.target.value)}
+        />
 
-        <Button>Join</Button>
+        <Button onClick={createPeer}>Join</Button>
       </Flex>
 
       <Flex position={"absolute"} top={10} left={10}>
